@@ -11,7 +11,8 @@ dependencies = [
     "click>=8.0",
     "pydantic>=2.0",
     "pyyaml>=6.0",
-    "mcp>=1.0",
+    # FastMCP surface is 1.x; 2.x renames the API and breaks the server import.
+    "mcp>=1.0,<2",
     "python-ulid>=2.0",
 ]
 
