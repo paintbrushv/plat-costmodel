@@ -37,8 +37,6 @@ dependencies = [
     "click>=8.0",
     "pydantic>=2.0",
     "pyyaml>=6.0",
-    # FastMCP surface is 1.x; 2.x renames the API and breaks the server import.
-    "mcp>=1.0,<2",
     "python-ulid>=2.0",
 ]
 
@@ -55,6 +53,13 @@ plat-cost = "plat_costmodel.cli:cli"
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+]
+# The standalone plat-costmodel MCP server. Pinned to mcp 1.x (2.x renames
+# FastMCP); the service modules (estimator/roi/sow/bid_eval) never import mcp,
+# so the core package installs cleanly alongside mcp 2.x consumers like
+# platworks.
+server = [
+    "mcp>=1.0,<2",
 ]
 
 [tool.setuptools.packages.find]
