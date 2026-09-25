@@ -1,0 +1,444 @@
+# plat-costmodel Knowledge Base
+# Source: domain-interview cost knowledge base (Day 1 seed data)
+# Date: 2026-03-22
+# This is the Day 1 seed data — the estimator works from this before any Yardi actuals are ingested.
+
+scope_levels:
+  light:
+    description: "Light cosmetic turn — paint, clean, patch, hardware, carpet"
+    total_range:
+      low: 3000
+      high: 5000
+    line_items:
+      paint:
+        low: 400
+        high: 600
+        notes: "Touch-up or single coat, may be in-house"
+      cleaning:
+        low: 300
+        high: 500
+        notes: "Deep clean, carpet clean"
+      patch_repair:
+        low: 500
+        high: 1000
+        notes: "Drywall patches, minor fixes"
+      hardware:
+        low: 200
+        high: 400
+        notes: "New cabinet/door hardware, outlet covers"
+      carpet:
+        low: 500
+        high: 1000
+        notes: "Replace carpet in bedrooms if needed"
+      contingency_pct: 10
+
+  standard_value_add:
+    description: "Full value-add turn — LVP, kitchen update, bath update, paint, appliances, fixtures"
+    total_range:
+      low: 12000
+      high: 18000
+    size_scaling:
+      small:
+        max_sqft: 700
+        low: 12000
+        high: 14000
+      medium:
+        min_sqft: 700
+        max_sqft: 950
+        low: 14000
+        high: 16000
+      large:
+        min_sqft: 950
+        low: 16000
+        high: 18000
+    line_items:
+      flooring:
+        low: 1500
+        high: 2500
+        notes: "LVP in kitchen/living/bath. Carpet in bedrooms optional (reduces cost). Subfloor repair pushes to top of range."
+        material: "LVP (luxury vinyl plank)"
+        variance_drivers:
+          - "Unit square footage (primary driver)"
+          - "Carpet in bedrooms vs LVP throughout"
+          - "Subfloor repair needed"
+      kitchen:
+        low: 1500
+        high: 2500
+        notes: "Paint existing cabinets, new hardware, butcher block or basic granite countertops. Replace cabinets only if water-damaged or structurally broken."
+        material: "Butcher block or basic granite counters"
+        variance_drivers:
+          - "Finish tier (basic vs upgraded)"
+          - "Cabinet condition (paint vs replace)"
+          - "Backsplash included in upgraded tier"
+      bathroom:
+        low: 2000
+        high: 3500
+        per: "bathroom"
+        notes: "New vanity/mirror, tub resurfacing or new surround, new fixtures, LVP flooring continuous from rest of unit. Toilet replaced if needed."
+        material: "Standard vanity, acrylic tub surround or refinish"
+        variance_drivers:
+          - "Tub resurface vs new surround"
+          - "Toilet replacement needed"
+          - "Tile vs LVP floor"
+      paint:
+        low: 800
+        high: 1200
+        notes: "Subbed out, standard 2-coat interior, whole unit."
+        variance_drivers:
+          - "Unit square footage"
+          - "Wall repair/texture work needed"
+      appliances:
+        low: 1500
+        high: 2500
+        notes: "Full package: fridge, stove, dishwasher, microwave. New basic black or stainless."
+        material: "Basic black or stainless steel"
+        variance_drivers:
+          - "Black vs stainless (stainless is higher)"
+          - "Include W/D connections adds cost"
+      fixtures_doors_trim:
+        low: 500
+        high: 1000
+        notes: "New light fixtures, outlet/switch covers, door hardware. Replace doors only if damaged."
+        variance_drivers:
+          - "Number of fixtures to replace"
+          - "Door replacement needed vs hardware only"
+    contingency_pct:
+      low: 10
+      high: 15
+
+finish_tiers:
+  basic:
+    description: "Standard finishes — gets the job done, clean and modern"
+    adjustments:
+      kitchen: "Laminate or basic butcher block counters, painted cabinets, basic hardware"
+      bathroom: "Standard vanity, basic fixtures"
+      flooring: "Standard grade LVP, carpet in bedrooms"
+      appliances: "Basic black"
+  upgraded:
+    description: "Nicer finishes — backsplash, better hardware, upgraded counters"
+    adjustments:
+      kitchen: "Granite counters, tile backsplash, upgraded hardware"
+      bathroom: "Upgraded vanity, better fixtures"
+      flooring: "Upgraded LVP throughout (no carpet)"
+      appliances: "Stainless steel"
+
+exterior_capex:
+  approach: "Estimated line item by line item, not lump-sum per-unit allocation"
+  per_unit_range:
+    low: 3000
+    high: 10000
+    notes: "Range driven by level of deferred maintenance"
+  condition_signals:
+    - "Visual condition (what you can see — peeling paint, roof patches, lot cracks)"
+    - "Age/class (what you can predict — older buildings need more)"
+  items:
+    roof:
+      per_unit_low: 1000
+      per_unit_high: 1500
+      cycle_years: "20-25"
+      estimation_inputs: "roof type + age + building footprint"
+    parking:
+      per_unit_low: 500
+      per_unit_high: 1500
+      cycle_years: "Reseal 3-5yr, full resurface 15-20yr"
+    hvac:
+      per_unit_low: 3000
+      per_unit_high: 5000
+      cycle_years: "15-20"
+    siding_paint:
+      per_unit_low: 1000
+      per_unit_high: 2000
+      cycle_years: "7-15 depending on material"
+    fencing_gates:
+      per_unit_low: 300
+      per_unit_high: 800
+      cycle_years: "As needed"
+    landscaping:
+      per_unit_low: 200
+      per_unit_high: 500
+      cycle_years: "Major rehab at acquisition"
+    signage_lighting:
+      per_unit_low: 100
+      per_unit_high: 300
+      cycle_years: "At acquisition"
+  bundles:
+    envelope_refresh:
+      includes: [siding_paint, signage_lighting, landscaping]
+      class_shift_to: "B"
+    full_envelope:
+      includes: [roof, siding_paint, signage_lighting, landscaping, fencing_gates]
+      class_shift_to: "B+"
+  annual_reserves:
+    class_b:
+      low: 250
+      high: 450
+    class_c:
+      low: 600
+      high: 800
+
+amenity_catalog:
+  pool:
+    install_low: 80000
+    install_high: 150000
+    annual_opex_low: 8000
+    annual_opex_high: 15000
+    typical_occupancy_lift_pct: 1.5
+    notes: "Concrete shell + decking + filtration. Excludes permitting."
+  dog_park:
+    install_low: 5000
+    install_high: 12000
+    annual_opex_low: 1000
+    annual_opex_high: 2500
+    typical_occupancy_lift_pct: 0.5
+  ev_chargers:                  # per charger; multiplied by AmenityCohort.quantity
+    install_low: 4000
+    install_high: 8000
+    annual_opex_low: 200
+    annual_opex_high: 500
+    typical_rent_premium_monthly: 25
+  package_room:
+    install_low: 3000
+    install_high: 8000
+    annual_opex_low: 0
+    annual_opex_high: 500
+    typical_occupancy_lift_pct: 0.3
+  fitness_buildout:
+    install_low: 25000
+    install_high: 75000
+    annual_opex_low: 1000
+    annual_opex_high: 3000
+    typical_rent_premium_monthly: 30
+  pickleball_court:
+    install_low: 15000
+    install_high: 35000
+    annual_opex_low: 500
+    annual_opex_high: 1500
+    typical_occupancy_lift_pct: 0.4
+
+deferred_maintenance:
+  # Full replacements priced above value-add overlay numbers in
+  # exterior_capex.items: a real roof tear-off costs more than a roof overlay.
+  roof_full_replacement:
+    per_unit_low: 2500
+    per_unit_high: 4000
+    typical_age_years: 25
+  parking_reconstruction:
+    per_unit_low: 1500
+    per_unit_high: 3000
+    typical_age_years: 25
+  hvac_unit_replacement:
+    per_unit_low: 4500
+    per_unit_high: 7500
+    typical_age_years: 12
+  galvanized_pipe_repipe:
+    per_unit_low: 1500
+    per_unit_high: 2500
+    triggered_by: "year_built < 1985 + symptom of leaks"
+  electrical_panel_upgrade:
+    per_unit_low: 800
+    per_unit_high: 1500
+    triggered_by: "year_built < 1990"
+
+risk_flags:
+  - year_range: [0, 1978]
+    flags:
+      - message: "Lead paint potential — test before disturbing painted surfaces"
+        type: "lead_paint"
+        recommended_action: >-
+          Schedule lead paint test ($300–$500) before any surface disturbance.
+          If positive, budget $500–$1,500 per unit for lead-safe practices and disposal.
+          Required disclosure under HUD rules.
+      - message: "Asbestos likely in popcorn ceilings, floor tiles, pipe insulation"
+        type: "asbestos"
+        recommended_action: >-
+          Schedule asbestos inspection before demolition ($400–$800).
+          If positive, licensed abatement required — budget $1,500–$3,000 per unit.
+          Do not disturb materials until tested.
+  - year_range: [1965, 1985]
+    flags:
+      - message: "30-40% chance of galvanized pipe issues when opening walls"
+        type: "galvanized_pipe"
+        recommended_action: >-
+          Add $2,000–$5,000 per unit to contingency if opening walls.
+          Inspect water pressure and rust discoloration at fixtures.
+          Budget for partial re-pipe if supply lines are galvanized.
+      - message: "Original cast iron drain lines may need replacement"
+        type: "cast_iron_drain"
+        recommended_action: >-
+          Camera-scope drain lines before close ($300–$500 per scope).
+          Budget $1,500–$3,000 per unit if replacement needed.
+          Root intrusion and corrosion are the primary failure modes.
+  - year_range: [0, 1990]
+    flags:
+      - message: "Electrical panel may need upgrade (Federal Pacific, Zinsco panels are hazards)"
+        type: "electrical_panel"
+        recommended_action: >-
+          Inspect panel brand during due diligence — Federal Pacific (Stab-Lok) and Zinsco
+          are fire hazards with known failure modes.
+          Budget $1,500–$2,500 per unit for panel replacement.
+          Consult licensed electrician for load capacity assessment.
+  - year_range: [0, 2000]
+    flags:
+      - message: "Foundation assessment recommended for slab-on-grade"
+        type: "foundation"
+        recommended_action: >-
+          Hire licensed structural engineer for foundation inspection ($500–$1,500 per building).
+          Look for stair-step cracking in brick, sticking doors, uneven floors.
+          Remediation ranges from $3,000 (piers) to $25,000+ (full leveling) — do not estimate without inspection.
+      - message: "Underground plumbing condition is a wild card — cannot estimate without scoping"
+        type: "underground_plumbing"
+        recommended_action: >-
+          Camera-scope main sewer line before close ($300–$500).
+          Remediation can reach $5,000–$15,000 per building for clay tile or cast iron lines.
+          Do not include underground plumbing in unit-level rehab estimate — track separately.
+
+estimation_philosophy:
+  conservative_bias: true
+  bias_rationale: "Underestimating is far worse than overestimating. Buying a bad deal costs real money; passing on a good one costs only opportunity."
+  roi_threshold_pct: 15
+  roi_formula: "(annual_rent_lift / total_cost_high) * 100"
+  roi_note: "Always use the HIGH cost estimate for ROI calculation"
+
+timeline:
+  standard_value_add:
+    per_unit_weeks_low: 1
+    per_unit_weeks_high: 2
+    units_per_month: "8-10 with a good crew"
+  delay_causes:
+    - "Scope creep from discoveries (open wall → plumbing/mold/electrical)"
+    - "Material delays (appliances backordered, specialty items)"
+  notes: "Contractor reliability was NOT cited as primary delay cause"
+
+markets:
+  dallas:
+    notes: "More competitive labor market — sometimes better pricing AND speed"
+  birmingham:
+    notes: "Materials may be cheaper, but labor is less competitive and slower"
+  approach: "Don't bake in adjustment factors. Track separately, let model learn from actuals."
+
+cost_matrix:
+  # Pre-computed per-unit total cost ranges for quick lookup and sanity checks.
+  #
+  # HOW THESE NUMBERS WERE DERIVED
+  # --------------------------------
+  # Standard value-add values are computed from the scope_levels line items above using:
+  #   1. Base line item ranges (flooring, kitchen, bathroom, paint, appliances, fixtures)
+  #   2. Size scaling factor: small=0.85, medium=1.00, large=1.15
+  #   3. Finish tier adjustment:
+  #      - basic:    (low,  low + 0.60 * (high - low))
+  #      - upgraded: (low + 0.40 * (high - low),  high)
+  #   4. Contingency applied to totals: 10% for light, 15% for standard_value_add
+  #   5. Bathroom line item multiplied by bathroom count (1-BA baseline here)
+  #
+  # CONFIGURABLE: Update these values as Yardi actuals accumulate to calibrate per-market.
+  # Do NOT add hardcoded Dallas vs Birmingham multipliers — track markets via actuals.
+  #
+  # SOURCES: domain-interview knowledge base 2026-03-22 + RSMeans multifamily benchmarks.
+  # CALIBRATION STATUS: Seed data — not yet validated against Yardi actuals.
+
+  _meta:
+    includes_contingency: true
+    contingency_pct_light: 10
+    contingency_pct_standard_value_add: 15
+    bathroom_basis: "1-bathroom baseline. Add per_bathroom_increment for each BA beyond first."
+    last_updated: "2026-03-22"
+    calibration_status: "seed"
+
+  light:
+    description: "Cosmetic touch-up — paint, clean, patch, hardware, carpet"
+    all_sizes:
+      any_finish:
+        low: 3300
+        high: 5500
+        basis: "Flat; light turns do not scale by unit size or finish tier"
+
+  standard_value_add:
+    description: "Full value-add turn — LVP, kitchen, bath, paint, appliances, fixtures"
+
+    small:
+      _sqft_range: "< 700 sf"
+      basic:
+        low: 7600
+        high: 11000
+        typical_unit: "1BR/1BA, 600-650 sf"
+        derivation: "Medium-basic line-item subtotal x0.85 size factor + 15% contingency"
+      upgraded:
+        low: 9600
+        high: 13000
+        typical_unit: "1BR/1BA, 600-650 sf"
+        derivation: "Medium-upgraded line-item subtotal x0.85 size factor + 15% contingency"
+
+    medium:
+      _sqft_range: "700-950 sf"
+      basic:
+        low: 9000
+        high: 13000
+        typical_unit: "2BR/1BA, 800-850 sf"
+        derivation: "Base line-item subtotal (1.0x scale) + 15% contingency"
+      upgraded:
+        low: 11500
+        high: 15500
+        typical_unit: "2BR/1BA, 800-850 sf"
+        derivation: "Upgraded line-item subtotal (1.0x scale) + 15% contingency"
+
+    large:
+      _sqft_range: "950+ sf"
+      basic:
+        low: 10300
+        high: 15000
+        typical_unit: "2BR/2BA, 1000 sf"
+        derivation: "Medium-basic line-item subtotal x1.15 size factor + 15% contingency"
+      upgraded:
+        low: 13000
+        high: 17500
+        typical_unit: "3BR/2BA, 1100 sf"
+        derivation: "Medium-upgraded line-item subtotal x1.15 size factor + 15% contingency"
+
+    per_bathroom_increment:
+      # Marginal cost per bathroom beyond the 1-BA baseline (includes 15% contingency).
+      # Apply once per additional bathroom: 2BA adds 1x increment; 3BA adds 2x.
+      # Formula: basic_bathroom_range x size_factor x 1.15 / upgraded_bathroom_range x size_factor x 1.15
+      _note: "Per-increment cost. For a 2BA unit: total = cell_range + 1x increment. 3BA: total + 2x."
+      small:
+        basic:
+          low: 2000
+          high: 2850
+          derivation: "Basic bathroom (2000-2900) x 0.85 x 1.15 contingency"
+        upgraded:
+          low: 2550
+          high: 3450
+          derivation: "Upgraded bathroom (2600-3500) x 0.85 x 1.15 contingency"
+      medium:
+        basic:
+          low: 2300
+          high: 3350
+          derivation: "Basic bathroom (2000-2900) x 1.00 x 1.15 contingency"
+        upgraded:
+          low: 3000
+          high: 4025
+          derivation: "Upgraded bathroom (2600-3500) x 1.00 x 1.15 contingency"
+      large:
+        basic:
+          low: 2650
+          high: 3850
+          derivation: "Basic bathroom (2000-2900) x 1.15 x 1.15 contingency"
+        upgraded:
+          low: 3450
+          high: 4625
+          derivation: "Upgraded bathroom (2600-3500) x 1.15 x 1.15 contingency"
+
+data_source:
+  system: "Yardi Voyager"
+  export_format: "CSV"
+  granularity: "Expense categories coded to line items, tagged to individual unit numbers"
+  historical_units: 100
+  note: "Pull actuals from Yardi for training data rather than relying on memory estimates"
+
+property_assessment:
+  pre_bid:
+    method: "Inspect 10-20% sample of units, extrapolate"
+    extrapolation_signals:
+      - "Building-level factors (age, prior management quality)"
+      - "Rent roll analysis (below-market rents → likely unrenovated)"
+  pre_close:
+    method: "Inspect every unit, refined unit-by-unit estimate"
