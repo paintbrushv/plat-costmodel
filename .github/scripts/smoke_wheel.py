@@ -40,12 +40,18 @@ def main() -> int:
         run([py, "-m", "pip", "install", "--quiet", "--upgrade", "pip"])
         run([py, "-m", "pip", "install", "--quiet", wheel])
 
-        # Imports + version
+        # Imports + version. Core wheel first: the core package must import and
+        # run with NO extras installed (mcp is intentionally a [server] extra).
         run([py, "-c",
              "import plat_costmodel; "
              "from plat_costmodel.estimator import estimate_unit; "
+             "print('core-import-ok', plat_costmodel.__version__)"])
+
+        # The [server] extra adds the standalone MCP server on top of the core wheel.
+        run([py, "-m", "pip", "install", "--quiet", "plat-costmodel[server]"])
+        run([py, "-c",
              "from plat_costmodel import server; "
-             "print('import-ok', plat_costmodel.__version__)"])
+             "print('server-import-ok')"])
 
         # Knowledge base ships in the wheel and the matrix reads it
         run([py, "-c",
