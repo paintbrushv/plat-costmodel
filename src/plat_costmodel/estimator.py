@@ -17,7 +17,7 @@ from .models import (
 )
 from .risk import get_risk_flags
 
-_KB_PATH = Path(__file__).resolve().parent.parent / "data" / "knowledge_base.yaml"
+_KB_PATH = Path(__file__).resolve().parent / "data" / "knowledge_base.yaml"
 
 
 def _load_kb() -> dict:

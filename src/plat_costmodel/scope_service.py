@@ -46,10 +46,8 @@ from plat_costmodel.store.repo import (
     SnapshotRepo,
 )
 
-# Knowledge-base path mirrors the layout in src/data/.
-_KB_PATH = (
-    Path(__file__).parent.parent / "data" / "knowledge_base.yaml"
-)
+# Knowledge base ships as package data (plat_costmodel/data/).
+_KB_PATH = Path(__file__).resolve().parent / "data" / "knowledge_base.yaml"
 
 
 def _kb_hash() -> str:

@@ -7,7 +7,7 @@ import yaml
 
 from .models import RiskFlag
 
-_KB_PATH = Path(__file__).resolve().parent.parent / "data" / "knowledge_base.yaml"
+_KB_PATH = Path(__file__).resolve().parent / "data" / "knowledge_base.yaml"
 
 
 def _load_risk_rules() -> list[dict]:

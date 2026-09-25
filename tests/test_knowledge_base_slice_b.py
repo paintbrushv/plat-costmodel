@@ -11,7 +11,10 @@ import yaml
 
 @pytest.fixture(scope="module")
 def kb() -> dict:
-    path = Path(__file__).resolve().parents[1] / "src" / "data" / "knowledge_base.yaml"
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "src" / "plat_costmodel" / "data" / "knowledge_base.yaml"
+    )
     with path.open() as f:
         return yaml.safe_load(f)
 

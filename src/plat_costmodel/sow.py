@@ -6,7 +6,7 @@ import yaml
 
 from .models import FinishTier, ScopeLevel, ScopeOfWork, SOWLineItem
 
-_KB_PATH = Path(__file__).resolve().parent.parent / "data" / "knowledge_base.yaml"
+_KB_PATH = Path(__file__).resolve().parent / "data" / "knowledge_base.yaml"
 
 
 def _load_kb() -> dict:

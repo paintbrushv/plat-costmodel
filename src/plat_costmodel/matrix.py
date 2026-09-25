@@ -1,7 +1,7 @@
 """Cost range data matrix — per-unit dollar lookup by scope × size × finish level.
 
 This module provides a fast, structured lookup into the pre-computed cost matrix
-stored in ``data/knowledge_base.yaml``.  It is the authoritative source for
+stored in ``plat_costmodel/data/knowledge_base.yaml`` (shipped package data).  It is
 "ballpark" ranges before a full line-item estimate is produced.
 
 Typical usage
@@ -33,7 +33,7 @@ import yaml
 
 from .models import FinishTier, ScopeLevel, SizeCategory
 
-_KB_PATH = Path(__file__).resolve().parent.parent / "data" / "knowledge_base.yaml"
+_KB_PATH = Path(__file__).resolve().parent / "data" / "knowledge_base.yaml"
 
 
 # ---------------------------------------------------------------------------

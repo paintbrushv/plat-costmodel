@@ -1,12 +1,38 @@
 [build-system]
-requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "plat-costmodel"
 version = "0.1.0"
-description = "Multifamily renovation cost estimation engine for Plat"
+description = "Multifamily renovation cost estimation engine: line-item estimates, SOW generation, contractor bid evaluation, and ROI gating"
+readme = "README.md"
 requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    {name = "paintbrush"}
+]
+keywords = [
+    "multifamily",
+    "real-estate",
+    "renovation",
+    "cost-estimation",
+    "value-add",
+    "proptech",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Real Estate",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
 dependencies = [
     "click>=8.0",
     "pydantic>=2.0",
@@ -16,17 +42,27 @@ dependencies = [
     "python-ulid>=2.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/paintbrushv/plat-costmodel"
+Repository = "https://github.com/paintbrushv/plat-costmodel"
+Issues = "https://github.com/paintbrushv/plat-costmodel/issues"
+Changelog = "https://github.com/paintbrushv/plat-costmodel/blob/main/README.md"
+
+[project.scripts]
+plat-cost = "plat_costmodel.cli:cli"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
 ]
 
-[project.scripts]
-plat-cost = "plat_costmodel.cli:cli"
-
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+plat_costmodel = ["data/*.yaml"]
+"plat_costmodel.store" = ["migrations/*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
