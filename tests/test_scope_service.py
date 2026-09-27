@@ -269,9 +269,15 @@ def test_estimate_scope_amenity_unknown_type_raises_structured_error(tmp_db):
     assert "moonbase" in str(exc.value)
 
 
-def test_estimate_scope_dispatches_deferred_cohort_to_not_implemented(tmp_db):
-    """DeferredMaintenanceCohort surfaces not_implemented (PR 5 lands the estimator)."""
-    from plat_costmodel.schemas import DeferredMaintenanceCohort, ProgramSchedule, ProgramType, ScopeRequest
+def test_estimate_scope_dispatches_deferred_cohort_to_estimator(tmp_db):
+    """DeferredMaintenanceCohort prices the named knowledge-base item."""
+    from plat_costmodel.schemas import (
+        DeferredMaintenanceCohort,
+        DeferredMaintenanceEstimate,
+        ProgramSchedule,
+        ProgramType,
+        ScopeRequest,
+    )
 
     p, _ = _seed(tmp_db)
     req = ScopeRequest(
@@ -280,11 +286,12 @@ def test_estimate_scope_dispatches_deferred_cohort_to_not_implemented(tmp_db):
         cohort=DeferredMaintenanceCohort(items=["roof_full_replacement"], total_units=10),
         schedule=ProgramSchedule(start_month="2026-06", monthly_pace=1),
     )
-    with pytest.raises(ValueError) as exc:
-        estimate_scope(req, conn=tmp_db)
-    vp = exc.value.validation_problem  # type: ignore[attr-defined]
-    assert vp.error_type == "not_implemented"
-    assert "deferred" in vp.message.lower() or "PR 5" in vp.message
+    result = estimate_scope(req, conn=tmp_db)
+    assert isinstance(result, DeferredMaintenanceEstimate)
+    assert result.total_low == 25_000
+    assert result.total_high == 40_000
+    assert result.per_unit_low == 2_500
+    assert result.per_unit_high == 4_000
 
 
 def test_estimate_scope_dispatches_exterior_cohort_to_estimator(tmp_db):
@@ -374,8 +381,8 @@ def test_estimate_from_deal_two_arg_interior_scenario_round_trips(tmp_db):
 
 def test_estimate_from_deal_index_aligned_with_scenarios(tmp_db):
     """estimates[i] / renovation_programs[i] correspond to scenarios[i].
-    Interior, exterior, and amenity all produce real estimates as of PR 4;
-    deferred remains not_implemented until PR 5."""
+    Interior, exterior, amenity, and deferred maintenance all produce real
+    estimates when the scenario carries the fields the estimator requires."""
     from plat_costmodel.schemas import (
         AmenityScenario, AmenityScopeEstimate,
         ExteriorScenario, ExteriorScopeEstimate,

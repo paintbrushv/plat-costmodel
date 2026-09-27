@@ -88,11 +88,7 @@ def estimate_scope(
         if isinstance(req.cohort, AmenityCohort):
             return _estimate_amenity(req, conn)
         if isinstance(req.cohort, DeferredMaintenanceCohort):
-            raise_problem(
-                "not_implemented",
-                "deferred-maintenance estimator not implemented; lands in slice B PR 5",
-                hint="items=" + ",".join(req.cohort.items),
-            )
+            return _estimate_deferred(req, conn)
         # Defensive — shouldn't reach here given CohortUnion is exhaustive.
         raise_problem(
             "validation_error",
@@ -278,6 +274,81 @@ def _estimate_amenity(req: ScopeRequest, conn: sqlite3.Connection) -> ScopeEstim
     return EstimateRepo(conn).create(est)
 
 
+def _estimate_deferred(req: ScopeRequest, conn: sqlite3.Connection) -> ScopeEstimate:
+    """Compute and persist a DeferredMaintenanceEstimate.
+
+    Prices only the cohort's named knowledge-base items at the cohort's
+    explicit unit quantity. A missing item or a missing per-unit range is
+    not replaced with a guessed cost, and no market multiplier is applied.
+    """
+    import yaml
+
+    from plat_costmodel.deferred_estimator import estimate_deferred_maintenance
+    from plat_costmodel.risk import get_risk_flags
+    from plat_costmodel.schemas import DeferredMaintenanceEstimate
+
+    prop_repo = PropertyRepo(conn)
+    prop = prop_repo.get(req.property_id)
+    if prop is None:
+        raise_problem(
+            "not_found", f"property {req.property_id} not found",
+            field_errors=[{"loc": ["property_id"], "msg": "not found"}],
+        )
+
+    snap = SnapshotRepo(conn).get_or_create_for_kb_hash(_kb_hash())
+
+    with open(_KB_PATH) as f:
+        kb = yaml.safe_load(f)
+
+    components = estimate_deferred_maintenance(
+        items=list(req.cohort.items),
+        quantity=req.cohort.total_units,
+        schedule=req.schedule,
+        kb=kb,
+        age_at_replacement_years=req.cohort.age_at_replacement_years,
+        condition=req.cohort.condition,
+    )
+    if components["total_low"] is None or components["total_high"] is None:
+        missing_items = components["missing_items"]
+        if missing_items:
+            catalog = kb.get("deferred_maintenance") or {}
+            raise_problem(
+                "validation_error",
+                "deferred-maintenance item not in knowledge_base.deferred_maintenance: "
+                + ", ".join(missing_items),
+                field_errors=[{
+                    "loc": ["cohort", "items"],
+                    "msg": f"unknown deferred-maintenance item: {missing_items[0]!r}",
+                }],
+                hint="Use one of: " + ", ".join(sorted(catalog)),
+            )
+        raise_problem(
+            "validation_error",
+            "deferred-maintenance estimate requires explicit items, an explicit "
+            "quantity, and an explicit schedule",
+            hint="a missing item or a missing quantity stays unpriced",
+        )
+
+    risk_flags = get_risk_flags(prop.year_built)
+    persisted_req = ScopeRepo(conn).create(req)
+    est = DeferredMaintenanceEstimate(
+        estimate_id="",
+        scope_request_id=persisted_req.scope_request_id,
+        property_id=prop.property_id,
+        pricing_snapshot_id=snap.snapshot_id,
+        line_items=components["line_items"],
+        total_low=components["total_low"],
+        total_high=components["total_high"],
+        per_unit_low=components["per_unit_low"],
+        per_unit_high=components["per_unit_high"],
+        triggered_by=components["triggered_by"],
+        risk_flags=risk_flags,
+        sanity_flags=[],
+        estimated_at=datetime.now(timezone.utc),
+    )
+    return EstimateRepo(conn).create(est)
+
+
 def _build_scope_requests_from_projection(
     projection, prop: Property, repo: PropertyRepo
 ) -> list[ScopeRequest]:
@@ -428,10 +499,11 @@ def estimate_from_deal(
 
     The returned ``estimates`` list is **index-aligned** with ``scenarios``:
     ``estimates[i]`` corresponds to ``scenarios[i]``. Successful runs return a
-    ``ScopeEstimate`` variant per scenario. Interior, exterior (PR 3), and
-    amenity (PR 4) scenarios produce real estimates; deferred-maintenance
-    scenarios still surface as a ``dict`` carrying a ``not_implemented``
-    error_type until per-type dispatch lands in slice B PR 5.
+    ``ScopeEstimate`` variant per scenario. Interior, exterior, amenity, and
+    deferred-maintenance scenarios produce real estimates when the request
+    names knowledge-base items and an explicit quantity. A deferred item that
+    is not in the knowledge base raises ``validation_error`` instead of a
+    guessed cost.
     Validation errors (e.g. unknown cohort_id) raise immediately and abort the
     run — successful estimates from earlier scenarios in the same list ARE
     persisted before the abort, leaving orphaned ScopeRequest + ScopeEstimate
