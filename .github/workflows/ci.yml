@@ -25,13 +25,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install ".[dev]"
+      - uses: astral-sh/setup-uv@v6
+      - name: Install locked runtime and test dependencies
+        run: uv sync --locked --python "${{ matrix.python-version }}" --extra dev --extra server
 
       - name: Test
-        run: pytest -v
+        run: uv run --locked --extra dev --extra server pytest -v
 
   build:
     name: Build sdist + wheel
