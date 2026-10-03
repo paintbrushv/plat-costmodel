@@ -2,7 +2,7 @@
 
 import functools
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 from pydantic import ValidationError
 
 from .bid_eval import evaluate_bid
@@ -70,7 +70,7 @@ def _validated(handler):
             ).model_dump()
     return wrapper
 
-mcp = FastMCP("plat-costmodel")
+mcp = MCPServer("plat-costmodel")
 
 
 @mcp.tool()

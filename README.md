@@ -48,3 +48,9 @@ Gut renos excluded — don't pencil at Class C rents.
 - **Yardi Voyager CSV exports** — historical actuals tagged to unit numbers
 - **RSMeans benchmarks** — industry reference data (future)
 - **Cross-user pooled data** — anonymous Glassdoor-style model (SaaS future)
+
+## v0.1 packaging candidate
+
+The standalone MCP adapter uses MCP 2.3–2.x. Install the `[server]` extra and run `plat-costmodel-mcp` (stdio).
+
+CI builds wheel/source archives, tests a fresh wheel environment, and validates runtime/package versions. A release tag must match `pyproject.toml`, use an unused PyPI version, and pass the full CI workflow before the tested artifacts can be uploaded. Candidate versions are not published by this change.
