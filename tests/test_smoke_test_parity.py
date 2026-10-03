@@ -140,8 +140,8 @@ def test_smoke_deal_through_fastmcp_dispatch_does_not_raise(tmp_db):
 
     # Unwrap TextContent → dict.  If Tool.run raised instead of returning,
     # asyncio.run() would propagate the exception and this line is never reached.
-    assert raw, "FastMCP dispatch returned empty content list"
-    result = json.loads(raw[0].text)
+    assert not raw.is_error and raw.content, "MCP dispatch returned no result"
+    result = json.loads(raw.content[0].text)
 
     serialized = json.dumps(result, default=str)
     assert "unhandled errors in a TaskGroup" not in serialized
@@ -170,8 +170,8 @@ def test_smoke_deal_through_fastmcp_dispatch_succeeds(tmp_db):
         mcp.call_tool("estimate_from_deal", {"deal_dict": deal, "scenarios_list": scenarios})
     )
 
-    assert raw, "FastMCP dispatch returned empty content list"
-    result = json.loads(raw[0].text)
+    assert not raw.is_error and raw.content, "MCP dispatch returned no result"
+    result = json.loads(raw.content[0].text)
 
     assert isinstance(result, dict), f"expected dict, got: {type(result)}"
     serialized = json.dumps(result, default=str)
@@ -220,8 +220,8 @@ def test_estimate_scope_via_fastmcp_unknown_property_returns_not_found(tmp_db):
 
     raw = asyncio.run(mcp.call_tool("estimate_scope", {"scope_request_dict": scope_request}))
 
-    assert raw, "FastMCP dispatch returned empty content list"
-    result = json.loads(raw[0].text)
+    assert not raw.is_error and raw.content, "MCP dispatch returned no result"
+    result = json.loads(raw.content[0].text)
 
     assert isinstance(result, dict), f"expected dict, got: {type(result)}"
     assert "unhandled errors in a TaskGroup" not in json.dumps(result, default=str)

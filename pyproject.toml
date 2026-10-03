@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plat-costmodel"
-version = "0.1.0"
+version = "0.1.1"
 description = "Multifamily renovation cost estimation engine: line-item estimates, SOW generation, contractor bid evaluation, and ROI gating"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -52,18 +52,17 @@ Changelog = "https://github.com/paintbrushv/plat-costmodel/blob/main/README.md"
 
 [project.scripts]
 plat-cost = "plat_costmodel.cli:cli"
+plat-costmodel-mcp = "plat_costmodel.server:main"
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "mcp>=2.3,<3",
 ]
-# The standalone plat-costmodel MCP server. Pinned to mcp 1.x (2.x renames
-# FastMCP); the service modules (estimator/roi/sow/bid_eval) never import mcp,
-# so the core package installs cleanly alongside mcp 2.x consumers like
-# platworks.
+# Standalone MCP 2 server; core services remain usable without the extra.
 server = [
-    "mcp>=1.0,<2",
+    "mcp>=2.3,<3",
 ]
 
 [tool.setuptools.packages.find]

@@ -22,6 +22,7 @@ DIST = REPO / "dist"
 
 def run(cmd: list[str], **kw) -> None:
     print("+", " ".join(cmd))
+    kw.setdefault("cwd", tempfile.gettempdir())
     subprocess.run(cmd, check=True, **kw)
 
 
@@ -34,39 +35,40 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="costmodel-smoke-") as tmp:
         venv_dir = Path(tmp) / "venv"
-        venv.create(venv_dir, with_pip=True)
-        py = str(venv_dir / "bin" / "python")
+        venv.create(venv_dir, with_pip=True, symlinks=sys.platform != "win32")
+        bin_dir = venv_dir / ("Scripts" if sys.platform == "win32" else "bin")
+        py = str(bin_dir / ("python.exe" if sys.platform == "win32" else "python"))
 
         run([py, "-m", "pip", "install", "--quiet", "--upgrade", "pip"])
         run([py, "-m", "pip", "install", "--quiet", wheel])
 
         # Imports + version. Core wheel first: the core package must import and
         # run with NO extras installed (mcp is intentionally a [server] extra).
-        run([py, "-c",
+        run([py, "-I", "-c",
              "import plat_costmodel; "
              "from plat_costmodel.estimator import estimate_unit; "
              "print('core-import-ok', plat_costmodel.__version__)"])
 
         # The [server] extra adds the standalone MCP server on top of the core wheel.
-        run([py, "-m", "pip", "install", "--quiet", "plat-costmodel[server]"])
-        run([py, "-c",
+        run([py, "-m", "pip", "install", "--quiet", wheel + "[server]"])
+        run([py, "-I", "-c",
              "from plat_costmodel import server; "
              "print('server-import-ok')"])
 
         # Knowledge base ships in the wheel and the matrix reads it
-        run([py, "-c",
+        run([py, "-I", "-c",
              "from plat_costmodel.matrix import _KB_PATH; "
              "assert _KB_PATH.exists(), f'missing {_KB_PATH}'; "
              "print('kb-ok', _KB_PATH)"])
 
         # Deterministic cost lookup works end to end
-        run([py, "-c",
+        run([py, "-I", "-c",
              "from plat_costmodel.matrix import lookup_range; "
              "r = lookup_range('standard_value_add', 'medium', 'basic'); "
              "print('matrix-ok', r)"])
 
         # CLI entry point
-        run([str(venv_dir / "bin" / "plat-cost"), "--help"])
+        run([str(bin_dir / ("plat-cost.exe" if sys.platform == "win32" else "plat-cost")), "--help"])
 
     print("SMOKE OK")
     return 0
